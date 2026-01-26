@@ -9,7 +9,7 @@ class Node<T> {
 }
 
 export default class SinglyLinkedList<T> {
-  private head: Node<T> | undefined;
+  private head?: Node<T>;
   public length: number;
 
   constructor() {
@@ -107,6 +107,7 @@ export default class SinglyLinkedList<T> {
         const targetNode = currNode.next;
 
         currNode.next = targetNode.next;
+        targetNode.next = undefined;
         result = targetNode.value;
         this.length--;
 
@@ -151,6 +152,7 @@ export default class SinglyLinkedList<T> {
     if (idx === 0) {
       const targetNode = this.head;
       this.head = targetNode.next;
+      targetNode.next = undefined;
       this.length--;
 
       return targetNode.value;
@@ -171,6 +173,7 @@ export default class SinglyLinkedList<T> {
 
     const targetNode = currNode.next!;
     currNode.next = targetNode.next;
+    targetNode.next = undefined;
     this.length--;
 
     return targetNode.value;
