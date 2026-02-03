@@ -3,9 +3,8 @@ class Node<T> {
   next?: Node<T>;
   prev?: Node<T>;
 
-  constructor(value: T, next?: Node<T>, prev?: Node<T>) {
+  constructor(value: T) {
     this.value = value;
-    this.next = next;
   }
 }
 
@@ -19,67 +18,76 @@ export default class DoublyLinkedList<T> {
   }
 
   /**
+   * Helper function to retrieve the node at the specified index.
+   *
+   * @param idx - Index to get the node at.
+   * @returns The node.
+   */
+  private getNodeAt(idx: number): Node<T> | undefined {
+    // Minor optimization if idx is the last item in the list.
+    if (idx === this.length - 1) {
+      return this.tail;
+    }
+
+    let currNode = this.head;
+    let currIdx = 0;
+
+    while (currNode && currIdx < idx) {
+      currNode = currNode.next;
+      currIdx++;
+    }
+
+    return currNode;
+  }
+
+  /**
+   * Helper function to remove the specified node.
+   *
+   * @param node - Node to remove.
+   */
+  private removeNode(node: Node<T>): void {
+    const prevNode = node.prev;
+    const nextNode = node.next;
+
+    if (prevNode) {
+      prevNode.next = nextNode;
+    }
+
+    if (nextNode) {
+      nextNode.prev = prevNode;
+    }
+
+    if (this.head === node) {
+      this.head = nextNode;
+    }
+
+    if (this.tail === node) {
+      this.tail = prevNode;
+    }
+
+    node.prev = undefined;
+    node.next = undefined;
+    this.length--;
+  }
+
+  /**
    * Inserts an item at the beginning of the list.
    *
    * @param item - Value to insert.
    */
   prepend(item: T): void {
     const newNode = new Node(item);
-
-    if (this.head) {
-      this.head.prev = newNode;
-    }
-
-    newNode.next = this.head;
-    this.head = newNode;
     this.length++;
-
-    if (!this.tail) {
-      this.tail = newNode;
-    }
-  }
-
-  /**
-   * Inserts an item into the list at the specified index.
-   *
-   * @param item - Value to insert.
-   * @param idx - Index to insert the value at.
-   */
-  insertAt(item: T, idx: number): void {
-    if (idx === 0) {
-      this.prepend(item);
-      return;
-    }
-
-    if (idx === this.length + 1) {
-      this.append(item);
-      return;
-    }
 
     if (!this.head) {
+      this.head = newNode;
+      this.tail = newNode;
       return;
     }
 
-    let currNode = this.head;
-    let currIdx = 0;
-
-    while (currNode.next && idx !== currIdx + 1) {
-      currNode = currNode.next;
-      currIdx++;
-    }
-
-    const newNode = new Node(item);
-    const tmp = currNode.next?.next;
-
-    currNode.next = newNode;
-    newNode.prev = currNode;
-  
-    if (tmp) {
-      tmp.prev = newNode;
-    }
-
-    newNode.next = tmp;
-    this.length++;
+    this.head.prev = newNode;
+    newNode.next = this.head;
+    this.head = newNode;
   }
 
   /**
@@ -103,6 +111,45 @@ export default class DoublyLinkedList<T> {
   }
 
   /**
+   * Inserts an item into the list at the specified index.
+   *
+   * @param item - Value to insert.
+   * @param idx - Index to insert the value at.
+   */
+  insertAt(item: T, idx: number): void {
+    if (idx < 0 || idx > this.length) {
+      return;
+    }
+
+    if (idx === 0) {
+      this.prepend(item);
+      return;
+    }
+
+    if (idx === this.length) {
+      this.append(item);
+      return;
+    }
+
+    if (!this.head) {
+      return;
+    }
+
+    const currNode = this.getNodeAt(idx)!;
+    const prevNode = currNode.prev;
+    const newNode = new Node(item);
+
+    if (prevNode) {
+      prevNode.next = newNode;
+    }
+
+    newNode.prev = prevNode;
+    newNode.next = currNode;
+    currNode.prev = newNode;
+    this.length++;
+  }
+
+  /**
    * Removes the specified value from the list.
    *
    * @param item - Value to remove.
@@ -113,39 +160,18 @@ export default class DoublyLinkedList<T> {
       return;
     }
 
-    if (this.head.value === item) {
-      return this.removeAt(0);
-    }
-
-    if (this.tail!.value === item) {
-      return this.removeAt(this.length);
-    }
-
     let currNode = this.head;
-    let result: T | undefined = undefined;
 
-    while (currNode.next) {
-      if (currNode.next.value === item) {
-        const targetNode = currNode.next;
-
-        currNode.next = targetNode.next;
-
-        if (currNode.next) {
-          currNode.next.prev = currNode;
-        }
-
-        targetNode.next = undefined;
-        targetNode.prev = undefined;
-        result = targetNode.value;
-        this.length--;
-
+    while (currNode) {
+      if (currNode.value === item) {
+        this.removeNode(currNode);
         break;
       }
 
-      currNode = currNode.next;
+      currNode = currNode.next!;
     }
 
-    return result;
+    return currNode?.value;
   }
 
   /**
@@ -155,19 +181,12 @@ export default class DoublyLinkedList<T> {
    * @returns The value.
    */
   get(idx: number): T | undefined {
-    if (idx === this.length) {
-      return this.tail?.value;
+    if (idx < 0 || idx >= this.length) {
+      return;
     }
 
-    let currNode = this.head;
-    let currIdx = 0;
-
-    while (currNode && currIdx !== idx) {
-      currNode = currNode.next;
-      currIdx++;
-    }
-
-    return currNode?.value;
+    const node = this.getNodeAt(idx);
+    return node?.value;
   }
 
   /**
@@ -177,64 +196,13 @@ export default class DoublyLinkedList<T> {
    * @returns The removed value, or `undefined` if the index is out of bounds.
    */
   removeAt(idx: number): T | undefined {
-    if (!this.head) {
+    if (idx < 0 || idx > this.length || !this.head) {
       return;
     }
 
-    if (idx === 0) {
-      const targetNode = this.head;
-      this.head = targetNode.next;
+    const node = this.getNodeAt(idx)!;
+    this.removeNode(node);
 
-      if (this.head) {
-        this.head.prev = undefined;
-      }
-
-      targetNode.prev = undefined;
-      targetNode.next = undefined;
-      this.length--;
-
-      return targetNode.value;
-    }
-
-    if (idx === this.length) {
-      const targetNode = this.tail!;
-      this.tail = targetNode.prev;
-
-      if (this.tail) {
-        this.tail.next = undefined;
-      }
-
-      targetNode.prev = undefined;
-      targetNode.next = undefined;
-      this.length--;
-
-      return targetNode.value;
-    }
-
-    let currNode = this.head;
-    let currIdx = 0;
-
-    while (currNode.next && idx !== currIdx + 1) {
-      currNode = currNode.next;
-      currIdx++;
-    }
-
-    // The index is out of bounds.
-    if (currIdx > idx) {
-      return;
-    }
-
-    const targetNode = currNode.next!;
-    currNode.next = targetNode.next;
-
-    if (currNode.next) {
-      currNode.next.prev = currNode;
-    }
-
-    targetNode.prev = undefined;
-    targetNode.next = undefined;
-    this.length--;
-
-    return targetNode.value;
+    return node.value;
   }
 }
