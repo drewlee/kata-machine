@@ -19,5 +19,18 @@ test("Trie", function() {
         "foo",
         "foolish",
     ]);
-});
 
+    trie.delete("bar");
+
+    expect(trie.find("bar")).toEqual([]);
+
+    trie.delete("foo");
+
+    expect(trie.find("fo")).toEqual([
+        "foolish",
+    ]);
+
+    trie.delete("foolish");
+
+    expect(trie.find("fo")).toEqual([]);
+});
