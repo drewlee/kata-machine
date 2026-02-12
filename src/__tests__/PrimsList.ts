@@ -1,4 +1,4 @@
-import prims from "@code/PrimsAlgorithm";
+import prims from "@code/PrimList";
 import { list1 } from "./graph";
 
 test("PrimsAlgorithm", function () {
