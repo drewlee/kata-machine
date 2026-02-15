@@ -5,5 +5,11 @@
             "<rootDir>/src/day1/$1"
         ]
     },
+    "testPathIgnorePatterns": [
+        "/node_modules/",
+        "graph.ts",
+        "tree.ts",
+        "ListTest.ts"
+    ],
     "preset": "ts-jest"
 }
