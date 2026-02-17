@@ -19,6 +19,8 @@ test("RingBuffer", function() {
     expect(buffer.get(2)).toEqual(12);
     expect(buffer.get(1)).toEqual(9);
     expect(buffer.get(0)).toEqual(42);
+
+    expect(() => buffer.push(15)).toThrowError('Capacity exceeded');
 });
 
 
